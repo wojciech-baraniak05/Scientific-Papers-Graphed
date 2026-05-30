@@ -1,0 +1,16 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+logs/
+*.log
+.DS_Store
+.idea/
+.vscode/
+CLAUDE.md
+part1.md
+part2.md
