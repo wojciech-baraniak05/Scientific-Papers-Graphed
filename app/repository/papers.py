@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, aliased
 
@@ -170,7 +168,6 @@ def get_graph(
         "direction": direction,
         "total_related": total_related,
         "shown": len(rows),
-        "live": False,
         "nodes": nodes,
         "edges": edges,
     }

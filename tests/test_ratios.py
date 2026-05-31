@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from app.repository.countries import (
     _ratio_per_100b_gdp,
     _ratio_per_million_capita,

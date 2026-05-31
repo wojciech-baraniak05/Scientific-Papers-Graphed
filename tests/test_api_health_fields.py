@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 
 def test_health(client):
     resp = client.get("/api/health")

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 
 def test_graph_cites(client):
     resp = client.get("/api/papers/W1/graph", params={"direction": "cites"})
@@ -9,7 +7,6 @@ def test_graph_cites(client):
     assert body["direction"] == "cites"
     assert body["total_related"] == 2
     assert body["shown"] == 2
-    assert body["live"] is False
 
     neighbor_ids = {n["id"] for n in body["nodes"] if not n["is_focus"]}
     assert neighbor_ids == {"W2", "W5"}
@@ -49,47 +46,3 @@ def test_graph_not_found(client):
 def test_graph_direction_validation(client):
     resp = client.get("/api/papers/W1/graph", params={"direction": "sideways"})
     assert resp.status_code == 422
-
-
-def test_graph_live_augments_cited_by(client, monkeypatch):
-    import app.api.routers.graph as graph_router
-
-    def fake_live(focus_id, existing, limit):
-        node = {
-            "id": "WLIVE",
-            "title": "Live citing paper",
-            "cited_by_count": 7,
-            "publication_year": 2020,
-            "is_open_access": True,
-            "is_focus": False,
-        }
-        return [node], [{"source": "WLIVE", "target": focus_id}]
-
-    monkeypatch.setattr(graph_router, "fetch_live_cited_by", fake_live)
-
-    resp = client.get(
-        "/api/papers/W1/graph", params={"direction": "cited_by", "live": "true"}
-    )
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["live"] is True
-    assert body["shown"] == 2
-    assert "WLIVE" in {n["id"] for n in body["nodes"]}
-    assert {"source": "WLIVE", "target": "W1"} in body["edges"]
-
-
-def test_graph_live_failure_degrades_gracefully(client, monkeypatch):
-    import app.api.routers.graph as graph_router
-
-    def boom(focus_id, existing, limit):
-        raise RuntimeError("openalex down")
-
-    monkeypatch.setattr(graph_router, "fetch_live_cited_by", boom)
-
-    resp = client.get(
-        "/api/papers/W1/graph", params={"direction": "cited_by", "live": "true"}
-    )
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["live"] is False
-    assert body["shown"] == 1

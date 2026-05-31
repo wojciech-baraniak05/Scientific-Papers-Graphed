@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pytest
 
 from app.pipeline.populate import scope_to_filter

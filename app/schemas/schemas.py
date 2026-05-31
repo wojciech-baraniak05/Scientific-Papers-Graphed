@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
@@ -96,7 +94,6 @@ class GraphResponse(BaseModel):
     direction: str
     total_related: int
     shown: int
-    live: bool
     nodes: list[GraphNode] = []
     edges: list[GraphEdge] = []
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 
 def test_search_orders_by_citations_and_excludes_stubs(client):
     resp = client.get("/api/papers/search")

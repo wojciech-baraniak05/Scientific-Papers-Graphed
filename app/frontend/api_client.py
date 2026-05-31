@@ -63,19 +63,10 @@ def get_paper(paper_id: str) -> dict:
 
 
 @st.cache_data(ttl=300, show_spinner=False)
-def _get_graph_cached(paper_id: str, direction: str, limit: int) -> dict:
+def get_paper_graph(paper_id: str, direction: str, limit: int) -> dict:
     return _get(
         f"/api/papers/{paper_id}/graph",
-        {"direction": direction, "limit": limit, "live": False},
-    )
-
-
-def get_paper_graph(paper_id: str, direction: str, limit: int, live: bool) -> dict:
-    if not live:
-        return _get_graph_cached(paper_id, direction, limit)
-    return _get(
-        f"/api/papers/{paper_id}/graph",
-        {"direction": direction, "limit": limit, "live": True},
+        {"direction": direction, "limit": limit},
     )
 
 

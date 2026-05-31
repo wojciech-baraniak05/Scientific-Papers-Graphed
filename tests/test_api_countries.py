@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 
 def test_field_country_ranking_by_papers(client):
     resp = client.get("/api/fields/22/country-ranking", params={"order_by": "papers"})

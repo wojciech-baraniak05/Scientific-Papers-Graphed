@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import streamlit as st
 from streamlit_agraph import Config, Edge, Node, agraph
 
@@ -54,8 +52,6 @@ def _render_graph(data: dict, direction: str) -> str | None:
     else:
         st.subheader(f"References {data.get('total_related') or 0:,} works — showing top {shown}")
     st.caption(_truncate(focus.get("title"), 110))
-    if data.get("live"):
-        st.caption("Augmented with live cited-by results from OpenAlex.")
 
     nodes = [
         Node(
@@ -139,7 +135,7 @@ def render() -> None:
     if not seed:
         return
 
-    controls = st.columns([2, 2, 1])
+    controls = st.columns([3, 1])
     with controls[0]:
         direction = st.radio(
             "Direction",
@@ -149,13 +145,6 @@ def render() -> None:
             key="graph_direction",
         )
     with controls[1]:
-        live = st.checkbox(
-            "Fetch live cited-by (OpenAlex)",
-            value=False,
-            disabled=direction != "cited_by",
-            key="graph_live",
-        )
-    with controls[2]:
         limit = st.slider("Max nodes", 10, 200, 50, step=5, key="graph_limit")
 
     if st.session_state.get("graph_focus_id") != seed:
@@ -163,7 +152,7 @@ def render() -> None:
         st.session_state["selected_node"] = None
 
     try:
-        data = get_paper_graph(seed, direction, limit, live and direction == "cited_by")
+        data = get_paper_graph(seed, direction, limit)
     except ApiError as exc:
         st.error(str(exc))
         return

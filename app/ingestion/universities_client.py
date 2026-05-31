@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import httpx
 
 from app.ingestion._http import get_json
