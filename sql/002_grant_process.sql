@@ -1,0 +1,2 @@
+GRANT PROCESS ON *.* TO 'papers'@'%';
+FLUSH PRIVILEGES;

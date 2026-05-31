@@ -101,9 +101,9 @@ def _build_row(
         "num_universities": num_universities,
         "gdp_usd": gdp,
         "population": population,
-        "papers_per_100b_gdp": _ratio_per_100b_gdp(paper_count, gdp),
+        "papers_per_gdp": _ratio_per_100b_gdp(paper_count, gdp),
         "papers_per_university": _ratio_per_university(paper_count, num_universities),
-        "papers_per_million_capita": _ratio_per_million_capita(paper_count, population),
+        "papers_per_capita": _ratio_per_million_capita(paper_count, population),
         "top_paper": None,
     }
 
@@ -114,9 +114,9 @@ _SORT_KEYS: dict[str, Callable[[dict], float | int | None]] = {
     "universities": lambda r: r["num_universities"],
     "gdp": lambda r: r["gdp_usd"],
     "population": lambda r: r["population"],
-    "papers_per_gdp": lambda r: r["papers_per_100b_gdp"],
+    "papers_per_gdp": lambda r: r["papers_per_gdp"],
     "papers_per_university": lambda r: r["papers_per_university"],
-    "papers_per_capita": lambda r: r["papers_per_million_capita"],
+    "papers_per_capita": lambda r: r["papers_per_capita"],
 }
 
 

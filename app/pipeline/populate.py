@@ -37,6 +37,7 @@ from app.processing.transform import (
     parse_stub,
     parse_universities,
     parse_work,
+    short_id,
 )
 
 _PAPER_DATA_COLS = [
@@ -86,18 +87,22 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+_OPENALEX_BASE = "https://openalex.org"
+
+
 def scope_to_filter(scope: str) -> str | None:
     if scope == "popular":
         return None
     if ":" in scope:
         kind, value = scope.split(":", 1)
-        value = value.strip()
-        if kind == "field":
-            return f"primary_topic.field.id:{value}"
-        if kind == "domain":
-            return f"primary_topic.domain.id:{value}"
+        key = short_id(value.strip())
+        if kind == "field" and key:
+            return f"primary_topic.field.id:{_OPENALEX_BASE}/fields/{key}"
+        if kind == "domain" and key:
+            return f"primary_topic.domain.id:{_OPENALEX_BASE}/domains/{key}"
     raise ValueError(
-        f"Invalid scope {scope!r}; expected 'popular', 'field:ID' or 'domain:ID'."
+        f"Invalid scope {scope!r}; expected 'popular', 'field:ID' or 'domain:ID' "
+        "(ID may be '22', 'fields/22', or the full OpenAlex URL)."
     )
 
 

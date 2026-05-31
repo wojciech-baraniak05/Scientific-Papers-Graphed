@@ -58,6 +58,19 @@ def init_db(engine: Engine | None = None) -> None:
 def get_db_size_bytes(session: Session) -> int:
     dialect = session.bind.dialect.name
     if dialect == "mysql":
+        try:
+            row = session.execute(
+                text(
+                    "SELECT COALESCE(SUM(file_size), 0) "
+                    "FROM information_schema.innodb_tablespaces "
+                    "WHERE SUBSTRING_INDEX(name, '/', 1) = DATABASE()"
+                )
+            ).scalar()
+            size = int(row or 0)
+            if size > 0:
+                return size
+        except Exception as exc:
+            logger.debug("innodb_tablespaces unavailable ({}); falling back to cached stats.", exc)
         row = session.execute(
             text(
                 "SELECT COALESCE(SUM(data_length + index_length), 0) "

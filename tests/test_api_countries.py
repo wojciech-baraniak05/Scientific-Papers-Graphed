@@ -15,7 +15,7 @@ def test_field_country_ranking_by_papers(client):
     assert nl["paper_count"] == 2
     assert nl["total_citations"] == 1500
     assert nl["num_universities"] == 50
-    assert nl["papers_per_100b_gdp"] == 0.2
+    assert nl["papers_per_gdp"] == 0.2
     assert nl["papers_per_university"] == 0.04
     assert nl["top_paper"]["id"] == "W1"
     assert nl["top_paper"]["cited_by_count"] == 1000
@@ -27,7 +27,7 @@ def test_field_country_ranking_ratio_nulls_sort_last(client):
     items = resp.json()["items"]
     assert [r["country_code"] for r in items] == ["US", "ZZ"]
     assert items[-1]["country_code"] == "ZZ"
-    assert items[-1]["papers_per_100b_gdp"] is None
+    assert items[-1]["papers_per_gdp"] is None
     assert items[-1]["papers_per_university"] is None
 
 

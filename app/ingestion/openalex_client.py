@@ -3,13 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 
 import httpx
-from loguru import logger
-from tenacity import (
-    Retrying,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+
+from app.ingestion._http import get_json
 
 WORK_SELECT = (
     "id,doi,title,publication_year,cited_by_count,referenced_works,"
@@ -19,11 +14,6 @@ WORK_SELECT = (
 STUB_SELECT = "id,doi,title,publication_year,cited_by_count,open_access,primary_topic"
 
 _IDS_PER_BATCH = 50
-_RETRYABLE_STATUS = {429, 500, 502, 503, 504}
-
-
-class RetryableHTTPError(Exception):
-    pass
 
 
 class OpenAlexClient:
@@ -38,28 +28,13 @@ class OpenAlexClient:
     ) -> None:
         self._email = email
         self._api_key = api_key
+        self._max_retries = max_retries
+        self._backoff_base = backoff_base
         ua = f"paper-citation-explorer/0.1 (mailto:{email})" if email else "paper-citation-explorer/0.1"
         self._client = httpx.Client(
             base_url=base_url,
             timeout=timeout,
             headers={"User-Agent": ua, "Accept": "application/json"},
-        )
-        self._retryer = Retrying(
-            stop=stop_after_attempt(max_retries),
-            wait=wait_exponential(multiplier=backoff_base, min=1, max=60),
-            retry=retry_if_exception_type(
-                (RetryableHTTPError, httpx.TransportError, httpx.TimeoutException)
-            ),
-            before_sleep=self._log_retry,
-            reraise=True,
-        )
-
-    @staticmethod
-    def _log_retry(retry_state) -> None:
-        logger.warning(
-            "OpenAlex request failed ({}); retry {}",
-            retry_state.outcome.exception(),
-            retry_state.attempt_number,
         )
 
     def _base_params(self) -> dict[str, str]:
@@ -70,16 +45,16 @@ class OpenAlexClient:
             params["api_key"] = self._api_key
         return params
 
-    def _do_get(self, path: str, params: dict) -> dict:
-        response = self._client.get(path, params=params)
-        if response.status_code in _RETRYABLE_STATUS:
-            raise RetryableHTTPError(f"{response.status_code} from {path}")
-        response.raise_for_status()
-        return response.json()
-
     def _get(self, path: str, params: dict) -> dict:
         merged = {**self._base_params(), **params}
-        return self._retryer(self._do_get, path, merged)
+        return get_json(
+            self._client,
+            path,
+            params=merged,
+            max_retries=self._max_retries,
+            backoff_base=self._backoff_base,
+            source="OpenAlex",
+        )
 
     def iter_works(
         self,

@@ -1,0 +1,13 @@
+services:
+  tests:
+    image: python:3.12-slim
+    container_name: papers-tests
+    working_dir: /app
+    environment:
+      DATABASE_URL: sqlite:////tmp/papers_test.db
+    volumes:
+      - ./:/app
+    command:
+      - sh
+      - -c
+      - "pip install --no-cache-dir -r requirements-dev.txt && pytest -q"

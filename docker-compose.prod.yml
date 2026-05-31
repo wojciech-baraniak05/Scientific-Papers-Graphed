@@ -1,0 +1,20 @@
+services:
+  mysql:
+    restart: always
+
+  backend:
+    restart: always
+    command:
+      - uvicorn
+      - app.api.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --workers
+      - "4"
+
+  frontend:
+    restart: always
+    environment:
+      API_BASE_URL: http://backend:8000

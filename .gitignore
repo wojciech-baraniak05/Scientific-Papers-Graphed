@@ -6,11 +6,13 @@ venv/
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
+
 logs/
 *.log
 .DS_Store
 .idea/
 .vscode/
-CLAUDE.md
-part1.md
-part2.md
+# CLAUDE.md
+# part1.md
+# part2.md
+# part2_5.md

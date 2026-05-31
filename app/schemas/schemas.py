@@ -135,9 +135,9 @@ class CountryRankingRow(BaseModel):
     num_universities: int | None = None
     gdp_usd: float | None = None
     population: int | None = None
-    papers_per_100b_gdp: float | None = None
+    papers_per_gdp: float | None = None
     papers_per_university: float | None = None
-    papers_per_million_capita: float | None = None
+    papers_per_capita: float | None = None
     top_paper: TopPaper | None = None
 
 

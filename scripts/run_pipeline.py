@@ -18,7 +18,7 @@ def main() -> int:
     parser.add_argument(
         "--scope",
         default="popular",
-        help="popular | field:ID | domain:ID (e.g. field:fields/22, domain:domains/1)",
+        help="popular | field:ID | domain:ID (ID may be 22, fields/22, or full URL)",
     )
     parser.add_argument("--target-gb", type=float, default=5.0, help="stop near this DB size")
     parser.add_argument(
