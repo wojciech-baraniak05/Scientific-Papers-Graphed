@@ -6,6 +6,7 @@ import requests
 import streamlit as st
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000").rstrip("/")
+API_DOCS_URL = os.getenv("API_DOCS_URL", f"{API_BASE_URL}/docs")
 REQUEST_TIMEOUT = float(os.getenv("API_TIMEOUT", "30"))
 
 

@@ -120,8 +120,11 @@ over `requests`:
   called from the UI).
 
 **`streamlit_app.py`** — entry point. Sets wide layout and page title, renders a
-sidebar that pings `/api/health` (green "API online · database up", red if
-unreachable) and shows the backend URL, then opens two `st.tabs` and delegates to
+top header row that pings `/api/health` (green "API online · database up", red if
+unreachable) and shows the backend URL plus a browser-reachable **Swagger /docs**
+link (`API_DOCS_URL`, defaulting to `{API_BASE_URL}/docs` and overridden to
+`http://localhost:<port>/docs` in Compose so it opens from the host), then opens
+two `st.tabs` and delegates to
 `graph_tab.render()` / `analytics_tab.render()`.
 
 **`graph_tab.py`** — Tab 1 (citation graph):
@@ -162,6 +165,14 @@ unreachable) and shows the backend URL, then opens two `st.tabs` and delegates t
   "Open Access · {oa_status}" with the `oa_url` link, or grey "Closed"), authors,
   year/field, a "Cited by" metric, the **DOI** as a `doi.org` link, and the
   abstract (truncated) in an expander.
+- **Re-rooting (graph navigation)** — when the panel shows a *non-focus* paper
+  (i.e. a clicked neighbour), it offers a "Make this the focus" button. Clicking it
+  stores the id in `st.session_state["focus_override"]` and `st.rerun()`s; the
+  override takes precedence over the search picker when choosing the graph seed, so
+  the graph re-roots on that node. Picking a different paper from the search box
+  clears the override. (Single-click still just previews in the panel — the
+  prebuilt agraph component only reports single-clicks to Python, so double-click
+  re-rooting would require patching the vendored JS bundle.)
 
 **`analytics_tab.py`** — Tab 2 (country analytics):
 - **Scope** — `get_fields()` → a Field/Domain `st.radio` → a `st.selectbox` of

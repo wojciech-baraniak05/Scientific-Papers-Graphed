@@ -2,7 +2,7 @@ import streamlit as st
 
 import analytics_tab
 import graph_tab
-from api_client import API_BASE_URL, get_health
+from api_client import API_BASE_URL, API_DOCS_URL, get_health
 
 st.set_page_config(
     page_title="Paper Citation Explorer",
@@ -11,10 +11,12 @@ st.set_page_config(
 )
 
 
-def _render_sidebar() -> None:
-    with st.sidebar:
-        st.header("Paper Citation Explorer")
+def _render_header() -> None:
+    title_col, status_col = st.columns([3, 1])
+    with title_col:
+        st.title("Paper Citation Explorer")
         st.caption("OpenAlex · World Bank · hipolabs")
+    with status_col:
         health = get_health()
         if health.get("database") == "up":
             st.success("API online · database up")
@@ -22,12 +24,11 @@ def _render_sidebar() -> None:
             st.error("API unreachable")
         else:
             st.warning(f"API status: {health.get('status', 'unknown')}")
-        st.caption(f"Backend: {API_BASE_URL}")
+        st.caption(f"Backend: {API_BASE_URL} · [Swagger docs]({API_DOCS_URL})")
 
 
 def main() -> None:
-    _render_sidebar()
-    st.title("Paper Citation Explorer")
+    _render_header()
     tab_graph, tab_analytics = st.tabs(["Citation graph", "Country analytics"])
     with tab_graph:
         graph_tab.render()

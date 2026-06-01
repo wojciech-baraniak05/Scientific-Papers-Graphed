@@ -49,6 +49,7 @@ services:
     restart: unless-stopped
     environment:
       API_BASE_URL: http://backend:8000
+      API_DOCS_URL: http://localhost:${BACKEND_PORT:-8000}/docs
     ports:
       - "${FRONTEND_PORT:-8501}:8501"
     depends_on:

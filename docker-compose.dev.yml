@@ -17,6 +17,7 @@ services:
       - ./app/frontend:/app/app/frontend
     environment:
       API_BASE_URL: http://backend:8000
+      API_DOCS_URL: http://localhost:${BACKEND_PORT:-8000}/docs
     command:
       - streamlit
       - run

@@ -73,7 +73,7 @@ def _render_graph(data: dict, direction: str) -> str | None:
             label=_truncate(n.get("title"), 28),
             size=_node_size(n, focus_count),
             color=_node_color(n),
-            font={"color": "#ffffff", "size": 10},
+            font={"color": "#ffffff", "size": 12},
             chosen={"label": True},
         )
         for n in data.get("nodes", [])
@@ -117,7 +117,7 @@ def _oa_badge(paper: dict) -> str:
     )
 
 
-def _render_panel(paper_id: str) -> None:
+def _render_panel(paper_id: str, focus_id: str) -> None:
     try:
         paper = get_paper(paper_id)
     except ApiError as exc:
@@ -126,6 +126,13 @@ def _render_panel(paper_id: str) -> None:
 
     st.markdown(f"### {paper.get('title') or paper_id}")
     st.markdown(_oa_badge(paper), unsafe_allow_html=True)
+
+    if paper_id != focus_id and st.button(
+        "Make this the focus", key="set_focus", use_container_width=True
+    ):
+        st.session_state["focus_override"] = paper_id
+        st.session_state["selected_node"] = None
+        st.rerun()
 
     authors = ", ".join(a.get("display_name") or "" for a in paper.get("authors", []))
     if authors:
@@ -155,7 +162,13 @@ def _render_panel(paper_id: str) -> None:
 
 
 def render() -> None:
-    seed = _seed_picker()
+    picked = _seed_picker()
+
+    if picked and picked != st.session_state.get("graph_picked"):
+        st.session_state["graph_picked"] = picked
+        st.session_state.pop("focus_override", None)
+
+    seed = st.session_state.get("focus_override") or picked
     if not seed:
         return
 
@@ -187,4 +200,4 @@ def render() -> None:
         if clicked:
             st.session_state["selected_node"] = clicked
     with col_panel:
-        _render_panel(st.session_state.get("selected_node") or seed)
+        _render_panel(st.session_state.get("selected_node") or seed, seed)
