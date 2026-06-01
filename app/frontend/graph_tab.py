@@ -1,3 +1,5 @@
+import math
+
 import streamlit as st
 from streamlit_agraph import Config, Edge, Node, agraph
 
@@ -15,9 +17,19 @@ def _truncate(text: str | None, length: int = 60) -> str:
 def _node_color(node: dict) -> str:
     if node.get("is_focus"):
         return "#e4572e"
+    if not node.get("title"):
+        return "#9aa0a6"
     if node.get("is_open_access"):
         return "#2e8b57"
     return "#4c78a8"
+
+
+def _node_size(node: dict, focus_count: int) -> float:
+    if node.get("is_focus"):
+        return 28.0
+    ratio = ((node.get("cited_by_count") or 0) + 1) / (focus_count + 1)
+    size = 28.0 + 8 * math.log10(ratio)
+    return max(6.0, min(48.0, size))
 
 
 def _seed_picker() -> str | None:
@@ -53,12 +65,14 @@ def _render_graph(data: dict, direction: str) -> str | None:
         st.subheader(f"References {data.get('total_related') or 0:,} works — showing top {shown}")
     st.caption(_truncate(focus.get("title"), 110))
 
+    focus_count = focus.get("cited_by_count") or 0
     nodes = [
         Node(
             id=n["id"],
-            label=_truncate(n.get("title") or n["id"], 28),
-            size=28 if n.get("is_focus") else 15,
+            label=_truncate(n.get("title"), 28),
+            size=_node_size(n, focus_count),
             color=_node_color(n),
+            chosen={"label": True},
         )
         for n in data.get("nodes", [])
     ]
@@ -75,6 +89,7 @@ def _render_graph(data: dict, direction: str) -> str | None:
         nodeHighlightBehavior=True,
         highlightColor="#f6c85f",
         collapsible=False,
+        interaction={"hover": True},
     )
     return agraph(nodes=nodes, edges=edges, config=config)
 
