@@ -115,7 +115,7 @@ for the public sources; set `OPENALEX_EMAIL` to join OpenAlex's polite pool.
    learning"). Toggle *cites* vs *is cited by*; point out the header
    "Cited by N papers — showing top 50" (full count vs drawn nodes). Click a node
    → the right panel shows title, authors, DOI link, cited-by count, abstract and
-   the open-access badge. Tick "fetch live cited-by" on a citation hub.
+   the open-access badge.
 4. **Tab 2 — country analytics (2 min).** Pick a field or domain; rank by
    *papers*, then by *papers per 100B GDP* and *papers per university* to surface
    above-weight countries. Show the table (with per-country top paper link) and

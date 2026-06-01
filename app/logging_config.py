@@ -25,17 +25,20 @@ def configure_logging(level: str | None = None) -> None:
     logger.remove()
     logger.add(sys.stderr, level=level, format=_FORMAT, enqueue=True, backtrace=False)
 
-    log_dir = Path(settings.log_dir)
-    log_dir.mkdir(parents=True, exist_ok=True)
-    logger.add(
-        log_dir / "ingest.log",
-        level=level,
-        format=_FORMAT,
-        rotation="20 MB",
-        retention="10 days",
-        compression="zip",
-        enqueue=True,
-        backtrace=False,
-    )
+    try:
+        log_dir = Path(settings.log_dir)
+        log_dir.mkdir(parents=True, exist_ok=True)
+        logger.add(
+            log_dir / "ingest.log",
+            level=level,
+            format=_FORMAT,
+            rotation="20 MB",
+            retention="10 days",
+            compression="zip",
+            enqueue=True,
+            backtrace=False,
+        )
+    except OSError as exc:
+        logger.warning("File logging disabled ({}): {}", settings.log_dir, exc)
 
     _CONFIGURED = True

@@ -115,9 +115,9 @@ over `requests`:
   `get_paper_graph`, `field_country_ranking`, `domain_country_ranking`.
 - Read-heavy/static responses are wrapped with `@st.cache_data(ttl=300)`. The
   dataset is loaded once and static, so caching is safe and layers on top of the
-  backend's own TTL cache. `get_paper_graph` is cached for `live=False` but bypasses
-  the cache when `live=True` (live results are non-deterministic and must not be
-  memoised).
+  backend's own TTL cache. `get_paper_graph` is cached unconditionally, since the
+  frontend only requests DB-backed results (the backend's `live` switch is not
+  called from the UI).
 
 **`streamlit_app.py`** — entry point. Sets wide layout and page title, renders a
 sidebar that pings `/api/health` (green "API online · database up", red if
@@ -127,9 +127,9 @@ unreachable) and shows the backend URL, then opens two `st.tabs` and delegates t
 **`graph_tab.py`** — Tab 1 (citation graph):
 - **Seed picker** — `st.text_input` → `search_papers` (empty query returns the most-
   cited papers) → `st.selectbox` labelled `"{title} — cited {N}"`.
-- **Controls** — a `cites` / `is cited by` `st.radio`; a "Fetch live cited-by
-  (OpenAlex)" checkbox, disabled unless direction is `cited_by` (live only makes
-  sense there); a "Max nodes" slider (10–200, default 50 = the C3 cap).
+- **Controls** — a `cites` / `is cited by` `st.radio` and a "Max nodes" slider
+  (10–200, default 50 = the C3 cap). The frontend serves the graph from the
+  authoritative DB edge list only; no live-OpenAlex control is exposed in the UI.
 - **Layout** — `st.columns([2, 1])`: graph on the left 2/3, detail panel on the
   right 1/3.
 - **Header (C4 compliance)** — the focus paper's total `cited_by_count` is shown as
@@ -239,8 +239,9 @@ to load-test a running API (`locust -f tests/locustfile.py --host http://localho
    `st.session_state` because `agraph()` returns it only on the click rerun.
 3. **C4 total-vs-shown** — the focus paper's full `cited_by_count` is displayed as
    its own field, independent of the drawn node cap (`shown`).
-4. **`live=true`** augments `cited_by` only and degrades gracefully; the checkbox is
-   disabled for `cites`.
+4. **DB-only graph** — the frontend requests the graph from the authoritative DB
+   edge list only; the backend's `live=true` augmentation still exists but is not
+   exposed in the UI.
 5. **Ratio fields aligned to the enum** (§2) — no client-side mapping for the three
    ratio metrics; units documented in the docs.
 6. **Layered caching** — `st.cache_data` (TTL) on top of the backend's TTL cache,

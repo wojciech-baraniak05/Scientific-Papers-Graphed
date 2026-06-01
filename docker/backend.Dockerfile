@@ -18,6 +18,8 @@ WORKDIR /app
 COPY app ./app
 COPY sql ./sql
 
+RUN mkdir -p /app/logs && chown appuser:appuser /app/logs
+
 USER appuser
 
 EXPOSE 8000
