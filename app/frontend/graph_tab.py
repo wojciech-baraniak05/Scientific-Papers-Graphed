@@ -69,9 +69,11 @@ def _render_graph(data: dict, direction: str) -> str | None:
     nodes = [
         Node(
             id=n["id"],
+            title=n.get("title"),
             label=_truncate(n.get("title"), 28),
             size=_node_size(n, focus_count),
             color=_node_color(n),
+            font={"color": "#ffffff", "size": 10},
             chosen={"label": True},
         )
         for n in data.get("nodes", [])
@@ -91,6 +93,13 @@ def _render_graph(data: dict, direction: str) -> str | None:
         collapsible=False,
         interaction={"hover": True},
     )
+    config.physics["barnesHut"] = {
+        "gravitationalConstant": -8000,
+        "centralGravity": 0.1,
+        "springLength": 180,
+        "springConstant": 0.04,
+        "avoidOverlap": 0.5,
+    }
     return agraph(nodes=nodes, edges=edges, config=config)
 
 

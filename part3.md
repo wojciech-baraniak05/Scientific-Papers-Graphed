@@ -140,14 +140,19 @@ unreachable) and shows the backend URL, then opens two `st.tabs` and delegates t
   larger and red; open-access neighbours are green, others blue. ID-only papers
   (un-enriched reference stubs with no `title`) are drawn grey and carry **no
   label** — their raw OpenAlex id is never shown. Other labels are truncated
-  titles. Node size is **relative to the focus paper**: the focus is a fixed
+  titles rendered in white at a reduced size (`font={"color": "#ffffff", "size":
+  10}`). Hovering a node shows its full, untruncated title as a tooltip (the
+  `Node.title` field; falls back to the OpenAlex id only for title-less stubs).
+  Node size is **relative to the focus paper**: the focus is a fixed
   reference size (28) and each neighbour is sized by the log of its citation ratio
   to the focus (`28 + 8·log10((count+1)/(focus+1))`, clamped to 6–48), so a
   neighbour reads as bigger/smaller than the paper you picked. Hovering a node
   bolds its label — `interaction.hover` on the `Config`
   plus `chosen={"label": True}` on each node (vis-network has no JSON-only way to
-  recolour a label on hover, so bold is the native emphasis). `agraph(...)` returns
-  the clicked node id.
+  recolour a label on hover, so bold is the native emphasis). Node spacing is
+  widened via the vis-network `barnesHut` physics (`gravitationalConstant=-8000`,
+  `springLength=180`, `centralGravity=0.1`, `avoidOverlap=0.5`) set directly on
+  `config.physics`. `agraph(...)` returns the clicked node id.
 - **agraph click persistence (key quirk)** — `agraph()` returns the clicked id only
   on the rerun triggered by that click; any later rerun (changing a widget) returns
   `None`. So the click is stored in `st.session_state["selected_node"]` and the
