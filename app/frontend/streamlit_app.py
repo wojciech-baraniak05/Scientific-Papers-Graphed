@@ -6,7 +6,7 @@ from api_client import API_BASE_URL, API_DOCS_URL, get_health
 
 st.set_page_config(
     page_title="Paper Citation Explorer",
-    page_icon="📚",
+    page_icon="",
     layout="wide",
 )
 

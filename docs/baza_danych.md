@@ -1,10 +1,5 @@
 # Baza danych
 
-MySQL 8 (InnoDB, utf8mb4). Główny schemat (DDL) jest w
-[../sql/001_schema.sql](../sql/001_schema.sql); modele SQLAlchemy w
-[../app/db/models.py](../app/db/models.py) odwzorowują go dokładnie i służą też
-jako zabezpieczenie przez `create_all` (oraz schemat SQLite używany w testach).
-
 ## Diagram encji i relacji
 
 ```mermaid
