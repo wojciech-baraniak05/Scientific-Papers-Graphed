@@ -1,6 +1,6 @@
 # Paper Citation Explorer
 
-## Jak odpalić
+## Jak uruchomić
 Plik z env i odpalenie dockera
 ```bash
 cp .env.example .env
