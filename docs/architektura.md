@@ -47,7 +47,7 @@ flowchart TB
 flowchart TB
     user([Przeglądarka])
 
-    subgraph compose[Sieć Docker Compose]
+    subgraph compose[Docker]
         frontend["Frontend\nStreamlit\n:8501"]
         backend["API backendu\nFastAPI + Uvicorn\n:8000"]
         mysql[("MySQL 8\n:3306\nwolumen nazwany")]
