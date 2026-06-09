@@ -1,110 +1,47 @@
 # Paper Citation Explorer
 
-A layered data system that ingests scholarly metadata from three open-data
-sources (**OpenAlex**, **World Bank**, **universities.hipolabs**), stores it in
-**MySQL**, exposes it through a **FastAPI** REST API, and presents it in a
-**Streamlit** frontend with two views:
-
-1. **Citation graph** — pick a paper, toggle *cites* / *is cited by*, explore an
-   interactive node-link graph, click a node for a detail panel (DOI, cited-by
-   count, abstract, open-access badge).
-2. **Country analytics** — pick an OpenAlex field or domain and rank countries,
-   including productivity ratios (papers per GDP / per university / per capita)
-   that surface countries punching above their economic or institutional weight.
-
-The architecture is a closed, top-down layered system — the frontend talks only
-to the backend, which is the only service (besides the one-time pipeline) that
-touches the database.
-
-```
-sources → ingestion → processing → MySQL → FastAPI → Streamlit
-```
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (C4 + UML),
-[docs/DATABASE.md](docs/DATABASE.md), [docs/API.md](docs/API.md),
-[docs/TECH_CHOICES.md](docs/TECH_CHOICES.md), and the build journals
-[part1.md](part1.md), [part2.md](part2.md), [part2_5.md](part2_5.md),
-[part3.md](part3.md).
-
----
-
-## Quick start (Docker, all three services)
-
+## Jak odpalić
+Plik z env i odpalenie dockera
 ```bash
-cp .env.example .env          # set OPENALEX_EMAIL (polite pool); defaults are fine for local
-docker compose up -d          # mysql + backend + frontend
+cp .env.example .env
+docker compose up -d
 ```
-
-If the database volume is empty, run the one-time population pipeline:
-
+Populacja bazy danych
 ```bash
 docker compose exec backend python scripts/run_pipeline.py --scope popular --target-gb 1
 ```
+Linki do stworzonych stron:
+- Frontend: http://localhost:8501
+- Swagger: http://localhost:8000/docs
+- Health: http://localhost:8000/api/health
 
-(or, on Windows, the end-to-end helper `scripts/run_full_pipeline.ps1 -TargetGb 1`).
 
-Then open:
-- **Frontend (UI):** http://localhost:8501
-- **API docs (Swagger):** http://localhost:8000/docs
-- **Health:** http://localhost:8000/api/health
 
----
-
-## Local development (without containers)
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt -r requirements-frontend.txt
-
-docker compose up -d mysql                                      # database only
-.\.venv\Scripts\python.exe -m uvicorn app.api.main:app --port 8000
-
-$env:API_BASE_URL = "http://localhost:8000"
-.\.venv\Scripts\python.exe -m streamlit run app/frontend/streamlit_app.py
-```
-
-The frontend reads `API_BASE_URL` (default `http://localhost:8000`).
-
----
-
-## Environments (compose overrides)
+## Środowiska do konteneryzacji
 
 ```bash
-# dev: hot reload + source bind-mounts
+#dev
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
-# test: run the pytest suite in a container (SQLite, no MySQL/network)
+#test
 docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm tests
 
-# prod: restart=always, uvicorn workers, no reload
+#prod
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
----
-
-## Tests
-
+## Testy
+Lokalne
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q                 # unit + API + performance
-locust -f tests/locustfile.py --host http://localhost:8000   # load test (running API)
+pip install -r requirements-dev.txt
+pytest
 ```
 
-- **Unit / API** — offline against in-memory SQLite seeded with fixtures.
-- **Performance** — `tests/test_performance.py` asserts hot endpoints respond
-  under a threshold; `tests/locustfile.py` drives load against a running API.
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q 
+locust -f tests/locustfile.py --host http://localhost:8000
+```
 
----
-
-## Configuration & secrets
-
-All configuration is environment-driven via `pydantic-settings`. Secrets live in
-a git-ignored `.env` (template: `.env.example`), are injected into containers by
-Compose, and are never hardcoded, committed, or logged. No API keys are required
-for the public sources; set `OPENALEX_EMAIL` to join OpenAlex's polite pool.
-
----
-
-## 10-minute demo script
 
 1. **Setup (1 min).** `docker compose up -d`; show all three containers healthy
    (`docker compose ps`). Open the UI (`:8501`) and Swagger (`:8000/docs`).

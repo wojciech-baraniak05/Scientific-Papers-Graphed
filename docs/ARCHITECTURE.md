@@ -1,66 +1,57 @@
-# Architecture
+# Architektura
 
-Paper Citation Explorer is a closed, top-down **layered architecture**: every
-request flows down through the layers, and the frontend never reaches the
-database directly. Open-data sources are integrated at the bottom; the user
-interacts only at the top.
 
-See [../CLAUDE.md](../CLAUDE.md) for the full plan, and
-[DATABASE.md](DATABASE.md) / [API.md](API.md) / [TECH_CHOICES.md](TECH_CHOICES.md)
-for the schema, REST contract and technology justification.
-
----
-
-## 1. Layered overview
+## Warstwy
 
 ```
-Open-data sources  → ingestion → processing → storage (MySQL) → backend API → frontend
+Źródła danych  → ingestion → przetwarzanie → magazyn - MySQL → API backendu → frontend
 ```
 
-| Layer | Responsibility | Code |
+| Warstwa | Odpowiedzialność | Kod |
 |---|---|---|
-| Ingestion | Typed HTTP clients (cursor paging, retries/backoff) | `app/ingestion/` |
-| Processing | Decode abstracts, normalise ids, reconcile country codes, derive country set + `is_educational` | `app/processing/transform.py` |
-| Storage | Normalised relational schema, citation edge list | MySQL 8, `app/db/`, `sql/001_schema.sql` |
-| Backend API | Typed REST + Swagger, caching, error handling | `app/api/`, `app/repository/`, `app/schemas/` |
-| Frontend | Two-tab Streamlit UI (graph + analytics) | `app/frontend/` |
+| Ingestion | Typowane klienty HTTP | `app/ingestion/` |
+| Przetwarzanie | Dekodowanie abstraktów, normalizacja id, uzgadnianie kodów krajów, wyprowadzanie zbioru krajów + `is_educational` | `app/processing/transform.py` |
+| Magazyn | Schemat relacyjny, lista krawędzi cytowań | MySQL 8, `app/db/`, `sql/001_schema.sql` |
+| API backendu | REST i Swagger, obsługa błędów | `app/api/`, `app/repository/`, `app/schemas/` |
+| Frontend | interfejs Streamlit | `app/frontend/` |
 
-Crosscutting: loguru logging, Pydantic validation, HTTP + Streamlit caching.
-Orchestration: the one-time, size-monitored population pipeline (`app/pipeline/`).
+Poza tym:
+- Logging loguru
+- Walidacja Pydantic,
+- orkiestracja z `app/pipeline/`
 
----
 
-## 2. C4 — Context (Level 1)
+## Kontekst
 
 ```mermaid
 flowchart TB
-    user([Researcher / user])
+    user([użytkownik])
     subgraph system[Paper Citation Explorer]
-        app[Layered data system]
+        app[Warstwowy system danych]
     end
-    openalex[(OpenAlex API)]
-    worldbank[(World Bank API)]
+    openalex[(API OpenAlex)]
+    worldbank[(API World Bank)]
     hipolabs[(universities.hipolabs)]
 
-    user -->|browses graph & analytics| app
-    app -->|works, citations, authorships| openalex
-    app -->|GDP, population, countries| worldbank
-    app -->|universities per country| hipolabs
+    user -->|przegląda graf i analitykę| app
+    app -->|prace, cytowania, autorstwa| openalex
+    app -->|PKB, populacja, kraje| worldbank
+    app -->|uczelnie wg kraju| hipolabs
 ```
 
 ---
 
-## 3. C4 — Container (Level 2)
+## Kontener
 
 ```mermaid
 flowchart TB
-    user([User browser])
+    user([Przeglądarka])
 
-    subgraph compose[Docker Compose network]
-        frontend["Frontend\nStreamlit + agraph\n:8501"]
-        backend["Backend API\nFastAPI + Uvicorn\n:8000"]
-        mysql[("MySQL 8\n:3306\nnamed volume")]
-        pipeline["Population pipeline\nCLI (one-time)"]
+    subgraph compose[Sieć Docker Compose]
+        frontend["Frontend\nStreamlit\n:8501"]
+        backend["API backendu\nFastAPI + Uvicorn\n:8000"]
+        mysql[("MySQL 8\n:3306\nwolumen nazwany")]
+        pipeline["Pipeline zasilający\nCLI (jednorazowo)"]
     end
 
     openalex[(OpenAlex)]
@@ -70,18 +61,17 @@ flowchart TB
     user -->|HTTP :8501| frontend
     frontend -->|REST JSON http://backend:8000| backend
     backend -->|SQLAlchemy ORM| mysql
-    pipeline -->|HTTP clients| openalex
+    pipeline -->|klienty HTTP| openalex
     pipeline --> worldbank
     pipeline --> hipolabs
-    pipeline -->|bulk upserts| mysql
+    pipeline -->|masowe upserty| mysql
 ```
 
-The frontend talks **only** to the backend; only the pipeline reaches the
-external sources, and only the backend and pipeline reach MySQL.
+Frontend komunikuje się tylko z backendem; tylko pipeline sięga do źródeł zewnętrznych. 
 
 ---
 
-## 4. C4 — Component (Level 3, backend + frontend)
+## Komponent (backend, frontend) 
 
 ```mermaid
 flowchart LR
@@ -114,41 +104,39 @@ flowchart LR
 
 ---
 
-## 5. UML deployment diagram
+## 5. Diagram wdrożenia UML
 
 ```mermaid
 flowchart TB
-    subgraph host[Docker host]
-        subgraph net[bridge network]
-            fe["«container» papers-frontend\nstreamlit:8501"]
-            be["«container» papers-backend\nuvicorn:8000"]
-            db["«container» papers-mysql\nmysql:3306"]
+    subgraph host[Host Docker]
+        subgraph net[sieć bridge]
+            fe["kontener - papers-frontend\nstreamlit:8501"]
+            be["kontener - papers-backend\nuvicorn:8000"]
+            db["kontener - papers-mysql\nmysql:3306"]
         end
-        vol[("«volume»\npapers_mysql_data")]
+        vol[("wolumen\npapers_mysql_data")]
     end
-    browser["«device» Browser"]
-    ext["«external» OpenAlex / World Bank / hipolabs"]
+    browser["urządzenie - Przeglądarka"]
+    ext["zewnętrzne źródła  OpenAlex / World Bank / hipolabs"]
 
     browser -->|:8501| fe
     fe -->|:8000| be
     be -->|:3306| db
     db --- vol
-    be -.one-time pipeline.-> ext
+    be -.pipeline.-> ext
 ```
 
----
+## 6. Przepływu żądań
 
-## 6. Request flow examples
+**Zakładka 1 — graf cytowań.** `streamlit_app` → `graph_tab` → `api_client.search_papers`
+→ `GET /api/papers/search` → repozytorium → MySQL; wybór pracy źródłowej →
+`api_client.get_paper_graph` → `GET /api/papers/{id}/graph` → repozytorium buduje
+węzły/krawędzie; kliknięcie węzła → `api_client.get_paper` →
+`GET /api/papers/{id}` → prawy panel szczegółów.
 
-**Tab 1 — citation graph.** `streamlit_app` → `graph_tab` → `api_client.search_papers`
-→ `GET /api/papers/search` → repository → MySQL; pick a seed →
-`api_client.get_paper_graph` → `GET /api/papers/{id}/graph` → repository builds
-nodes/edges; clicking a node → `api_client.get_paper` →
-`GET /api/papers/{id}` → right-hand detail panel.
-
-**Tab 2 — country analytics.** `analytics_tab` → `api_client.get_fields` →
-`GET /api/fields`; pick a field/domain + metric →
+**Zakładka 2 — analityka krajów.** `analytics_tab` → `api_client.get_fields` →
+`GET /api/fields`; wybór dziedziny/domeny + metryki →
 `api_client.field_country_ranking` / `domain_country_ranking` →
-`GET /api/fields|domains/{id}/country-ranking` → repository aggregates
-`paper_countries ⋈ papers ⋈ countries`, computes ratios, returns the ranked
-table → `st.dataframe` + `st.bar_chart`.
+`GET /api/fields|domains/{id}/country-ranking` → repozytorium agreguje
+`paper_countries ⋈ papers ⋈ countries`, wylicza wskaźniki i zwraca uszeregowaną
+tabelę → `st.dataframe` + `st.bar_chart`.
